@@ -1,8 +1,5 @@
-// src/services/user.service.ts
 import { UserRepository } from "../repositories/user.repository";
-import validator from "validator";
 import bcrypt from "bcryptjs";
-import { ValidationError } from "../middlewares/errorHandler";
 import { User } from "../database/models/user.model";
 
 export class UserService {
@@ -12,15 +9,15 @@ export class UserService {
     this.userRepository = new UserRepository();
   }
 
-  async getAllUsers(page: string, limit: string): Promise<any> {
-    const options = {
-      page: parseInt(page || "1"),
-      limit: parseInt(limit || "10"),
-    };
-    return this.userRepository.getAllUsers(options.page, options.limit);
+  async getAllUsers(page: string, limit: string) {
+    const users = await this.userRepository.getAllUsers(
+      Number(page),
+      Number(limit)
+    );
+    return users;
   }
 
-  async getUserById(id: string): Promise<any> {
+  async getUserById(id: string) {
     const user = await this.userRepository.getUserById(id);
     if (!user) {
       throw new Error("User not found");
@@ -28,59 +25,48 @@ export class UserService {
     return user;
   }
 
-  async createUser(
-    username: string,
-    email: string,
-    password: string
-  ): Promise<any> {
-    if (
-      !validator.isStrongPassword(password, {
-        minLength: 8,
-        minLowercase: 1,
-        minUppercase: 1,
-        minNumbers: 1,
-        minSymbols: 1,
-      })
-    ) {
-      throw new ValidationError("Password is not strong enough");
+  async createUser(fullname: string, email: string, password: string) {
+    if (!email) {
+      throw new Error("Invalid email");
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    return this.userRepository.createUser({
-      username,
+    const newUser: Partial<User> = {
+      fullname,
       email,
       password: hashedPassword,
-    } as User);
+      roles: ["user"],
+    };
+    const createdUser = await this.userRepository.createUser(newUser);
+    return createdUser;
   }
 
-  async deleteUser(id: string): Promise<any> {
-    const user = await this.userRepository.deleteUser(id);
-    if (!user) {
+  async deleteUser(id: string) {
+    const deletedUser = await this.userRepository.deleteUser(id);
+    if (!deletedUser) {
       throw new Error("User not found");
     }
-    return { status: 200, message: "Deleted successfully" };
+    return {
+      status: 200,
+      message: "Deleted successfully",
+    };
   }
 
   async updateUser(
     id: string,
-    fullName?: string,
+    fullname?: string,
     email?: string,
-    password?: string,
-    status?: string
-  ): Promise<any> {
-    const user = await this.userRepository.getUserById(id);
-    if (!user) {
-      throw new Error("User not found");
-    }
-
+    password?: string
+  ) {
     const updatedData: Partial<User> = {};
-    if (fullName) updatedData.fullName = fullName;
+    if (fullname) updatedData.fullname = fullname;
     if (email) updatedData.email = email;
     if (password) updatedData.password = await bcrypt.hash(password, 10);
-    if (status) updatedData.status = status;
 
     const updatedUser = await this.userRepository.updateUser(id, updatedData);
+    if (!updatedUser) {
+      throw new Error("User not found");
+    }
     return {
       status: 200,
       message: "User updated successfully",

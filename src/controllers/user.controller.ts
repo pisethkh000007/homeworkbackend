@@ -1,4 +1,3 @@
-// src/controllers/user.controller.ts
 import {
   Controller,
   Route,
@@ -52,11 +51,16 @@ export class UsersController extends Controller {
 
   @Post("register")
   public async createUser(
-    @Body() requestBody: { username: string; email: string; password: string }
+    @Body()
+    requestBody: {
+      fullname: string;
+      email: string;
+      password: string;
+    }
   ): Promise<any> {
     try {
       return this.userService.createUser(
-        requestBody.username,
+        requestBody.fullname,
         requestBody.email,
         requestBody.password
       );
@@ -80,19 +84,17 @@ export class UsersController extends Controller {
     @Path() id: string,
     @Body()
     requestBody: {
-      fullName?: string;
+      fullname?: string;
       email?: string;
       password?: string;
-      status?: string;
     }
   ): Promise<any> {
     try {
       return this.userService.updateUser(
         id,
-        requestBody.fullName,
+        requestBody.fullname,
         requestBody.email,
-        requestBody.password,
-        requestBody.status
+        requestBody.password
       );
     } catch (error) {
       console.error("Error updating user:", error);

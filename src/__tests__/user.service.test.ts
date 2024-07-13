@@ -1,202 +1,214 @@
-// // user.service.test.ts
+import { UserService } from "../services/user.service";
+import { UserRepository } from "../repositories/user.repository";
+import bcrypt from "bcryptjs";
 
-// import { UserService } from "../services/user.service";
-// import { UserRepository } from "../repositories/user.repository";
-// import bcrypt from "bcryptjs";
-// import validator from "validator";
-// import { ValidationError } from "../middlewares/errorHandler";
-// import { User } from "../database/models/user.model";
+import { User } from "../database/models/user.model";
 
-// jest.mock("bcryptjs");
-// jest.mock("validator");
+jest.mock("bcryptjs");
+jest.mock("validator");
 
-// describe("UserService", () => {
-//   let userService: UserService;
-//   let mockUserRepository: jest.Mocked<UserRepository>;
+describe("UserService", () => {
+  let userService: UserService;
+  let mockUserRepository: jest.Mocked<UserRepository>;
 
-//   beforeEach(() => {
-//     mockUserRepository = {} as jest.Mocked<UserRepository>;
-//     userService = new UserService();
-//     userService["userRepository"] = mockUserRepository;
-//   });
+  beforeEach(() => {
+    mockUserRepository = {
+      getAllUsers: jest.fn(),
+      getUserById: jest.fn(),
+      createUser: jest.fn(),
+      deleteUser: jest.fn(),
+      updateUser: jest.fn(),
+    } as jest.Mocked<UserRepository>;
+    userService = new UserService();
+    userService["userRepository"] = mockUserRepository;
+  });
 
-//   afterEach(() => {
-//     jest.clearAllMocks();
-//   });
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
-//   describe("getAllUsers", () => {
-//     it("should call UserRepository.getAllUsers with correct arguments", async () => {
-//       const mockUsers: User[] = [
-//         {
-//           id: "1",
-//           fullName: "Test User 1",
-//           email: "test1@example.com",
-//           password: "hashed1",
-//           roles: ["user"],
-//         },
-//         {
-//           id: "2",
-//           fullName: "Test User 2",
-//           email: "test2@example.com",
-//           password: "hashed2",
-//           roles: ["admin"],
-//         },
-//       ];
+  describe("getAllUsers", () => {
+    it("should call UserRepository.getAllUsers with correct arguments", async () => {
+      const mockUsers: User[] = [
+        {
+          _id: "1",
+          fullname: "Test User 1",
+          email: "test1@example.com",
+          password: "hashed1",
+          roles: ["user"],
+        },
+        {
+          _id: "2",
+          fullname: "Test User 2",
+          email: "test2@example.com",
+          password: "hashed2",
+          roles: ["admin"],
+        },
+      ];
 
-//       mockUserRepository.getAllUsers.mockResolvedValue(mockUsers);
+      mockUserRepository.getAllUsers.mockResolvedValue(mockUsers);
 
-//       const result = await userService.getAllUsers("1", "10");
+      const result = await userService.getAllUsers("1", "10");
 
-//       expect(result).toEqual(mockUsers);
-//       expect(mockUserRepository.getAllUsers).toHaveBeenCalledWith(1, 10);
-//     });
-//   });
+      expect(result).toEqual(mockUsers);
+      expect(mockUserRepository.getAllUsers).toHaveBeenCalledWith(1, 10);
+    });
+  });
 
-//   describe("getUserById", () => {
-//     it("should return user when found", async () => {
-//       const mockUser: User = {
-//         id: "1",
-//         fullName: "Test User",
-//         email: "test@example.com",
-//         password: "hashedpassword",
-//         roles: ["user"],
-//       };
+  describe("getUserById", () => {
+    it("should return user when found", async () => {
+      const mockUser: User = {
+        _id: "1",
+        fullname: "Test User",
+        email: "test@example.com",
+        password: "hashedpassword",
+        roles: ["user"],
+      };
 
-//       mockUserRepository.getUserById.mockResolvedValueOnce(mockUser);
+      mockUserRepository.getUserById.mockResolvedValueOnce(mockUser);
 
-//       const result = await userService.getUserById("1");
+      const result = await userService.getUserById("1");
 
-//       expect(result).toEqual(mockUser);
-//       expect(mockUserRepository.getUserById).toHaveBeenCalledWith("1");
-//     });
+      expect(result).toEqual(mockUser);
+      expect(mockUserRepository.getUserById).toHaveBeenCalledWith("1");
+    });
 
-//     it("should throw error when user not found", async () => {
-//       mockUserRepository.getUserById.mockResolvedValueOnce(null);
+    it("should throw error when user not found", async () => {
+      mockUserRepository.getUserById.mockResolvedValueOnce(null);
 
-//       await expect(userService.getUserById("1")).rejects.toThrowError(
-//         "User not found"
-//       );
-//       expect(mockUserRepository.getUserById).toHaveBeenCalledWith("1");
-//     });
-//   });
+      await expect(userService.getUserById("1")).rejects.toThrowError(
+        "User not found"
+      );
+      expect(mockUserRepository.getUserById).toHaveBeenCalledWith("1");
+    });
+  });
 
-//   describe("createUser", () => {
-//     it("should create user with valid inputs", async () => {
-//       const username = "testuser";
-//       const email = "test@test.com";
-//       const password = "Password1!";
+  describe("createUser", () => {
+    it("should create user with valid inputs", async () => {
+      const fullname = "testuser";
+      const email = "test@test.com";
+      const password = "Password1!";
+      const hashedPassword = "hashedPassword1!";
+      const newUser: User = {
+        _id: "1",
+        fullname,
+        email,
+        password: hashedPassword,
+        roles: ["user"],
+      };
 
-//       const hashedPassword = "hashedpassword";
-//       (validator.isStrongPassword as jest.Mock).mockReturnValueOnce(true);
-//       (bcrypt.hash as jest.Mock).mockResolvedValueOnce(hashedPassword);
-//       const mockUser: User = {
-//         id: "1",
-//         fullName: "Test User",
-//         email: "test@example.com",
-//         password: hashedPassword,
-//         roles: ["user"],
-//       };
-//       mockUserRepository.createUser.mockResolvedValueOnce(mockUser);
+      (bcrypt.hash as jest.Mock).mockResolvedValue(hashedPassword);
+      mockUserRepository.createUser.mockResolvedValue(newUser);
 
-//       const result = await userService.createUser(username, email, password);
+      const result = await userService.createUser(fullname, email, password);
 
-//       expect(result).toEqual(mockUser);
-//       expect(mockUserRepository.createUser).toHaveBeenCalledWith({
-//         username,
-//         email,
-//         password: hashedPassword,
-//         fullName: "Test User",
-//         roles: ["user"],
-//       });
-//     });
+      expect(result).toEqual(newUser);
+      expect(bcrypt.hash).toHaveBeenCalledWith(password, 10);
+      expect(mockUserRepository.createUser).toHaveBeenCalledWith({
+        fullname,
+        email,
+        password: hashedPassword,
+        roles: ["user"],
+      });
+    });
 
-//     it("should throw ValidationError for weak password", async () => {
-//       const username = "testuser";
-//       const email = "test@test.com";
-//       const password = "weak";
+    it("should throw validation error with invalid email", async () => {
+      const fullname = "testuser";
+      const email = "";
+      const password = "Password1!";
 
-//       (validator.isStrongPassword as jest.Mock).mockReturnValueOnce(false);
+      await expect(
+        userService.createUser(fullname, email, password)
+      ).rejects.toThrowError("Invalid email");
+      expect(mockUserRepository.createUser).not.toHaveBeenCalled();
+    });
+  });
 
-//       await expect(
-//         userService.createUser(username, email, password)
-//       ).rejects.toThrowError(ValidationError);
-//       expect(mockUserRepository.createUser).not.toHaveBeenCalled();
-//     });
-//   });
+  describe("deleteUser", () => {
+    it("should delete user by id", async () => {
+      const mockUser: User = {
+        _id: "1",
+        fullname: "Test User",
+        email: "test@example.com",
+        password: "hashedpassword",
+        roles: ["user"],
+      };
 
-//   describe("deleteUser", () => {
-//     it("should delete user when found", async () => {
-//       const mockUser: User = {
-//         id: "1",
-//         fullName: "Test User",
-//         email: "test@example.com",
-//         password: "hashedpassword",
-//         roles: ["user"],
-//       };
-//       mockUserRepository.deleteUser.mockResolvedValueOnce(mockUser);
+      mockUserRepository.deleteUser.mockResolvedValue(mockUser);
 
-//       const result = await userService.deleteUser("1");
+      const result = await userService.deleteUser("1");
 
-//       expect(result).toEqual({ status: 200, message: "Deleted successfully" });
-//       expect(mockUserRepository.deleteUser).toHaveBeenCalledWith("1");
-//     });
+      expect(result).toEqual({
+        status: 200,
+        message: "Deleted successfully",
+      });
+      expect(mockUserRepository.deleteUser).toHaveBeenCalledWith("1");
+    });
 
-//     it("should throw error when user not found", async () => {
-//       mockUserRepository.deleteUser.mockResolvedValueOnce(null);
+    it("should throw error when user not found", async () => {
+      mockUserRepository.deleteUser.mockResolvedValue(null);
 
-//       await expect(userService.deleteUser("1")).rejects.toThrowError(
-//         "User not found"
-//       );
-//       expect(mockUserRepository.deleteUser).toHaveBeenCalledWith("1");
-//     });
-//   });
+      await expect(userService.deleteUser("1")).rejects.toThrowError(
+        "User not found"
+      );
+      expect(mockUserRepository.deleteUser).toHaveBeenCalledWith("1");
+    });
+  });
 
-//   describe("updateUser", () => {
-//     it("should update user when found", async () => {
-//       const userId = "1";
-//       const updatedData = {
-//         email: "updated@test.com",
-//         password: "newpassword",
-//       };
-//       const updatedUser: User = {
-//         id: userId,
-//         fullName: "Updated Test User", // Updated user data
-//         email: updatedData.email,
-//         password: "hashedpassword",
-//         roles: ["user"],
-//       };
-//       mockUserRepository.getUserById.mockResolvedValueOnce({
-//         id: userId,
-//         fullName: "Test User",
-//       });
-//       mockUserRepository.updateUser.mockResolvedValueOnce(updatedUser);
+  describe("updateUser", () => {
+    it("should update user with valid inputs", async () => {
+      const id = "1";
+      const fullname = "updatedUser";
+      const email = "updated@example.com";
+      const password = "updatedPassword";
+      const hashedPassword = "hashedUpdatedPassword";
+      const updatedUser: User = {
+        _id: id,
+        fullname,
+        email,
+        password: hashedPassword,
+        roles: ["user"],
+      };
 
-//       const result = await userService.updateUser(
-//         userId,
-//         updatedData.email,
-//         updatedData.password
-//       );
+      (bcrypt.hash as jest.Mock).mockResolvedValue(hashedPassword);
+      mockUserRepository.updateUser.mockResolvedValue(updatedUser);
 
-//       expect(result).toEqual({
-//         status: 200,
-//         message: "User updated successfully",
-//         data: updatedUser,
-//       });
-//       expect(mockUserRepository.getUserById).toHaveBeenCalledWith(userId);
-//       expect(mockUserRepository.updateUser).toHaveBeenCalledWith(
-//         userId,
-//         updatedData
-//       );
-//     });
+      const result = await userService.updateUser(
+        id,
+        fullname,
+        email,
+        password
+      );
 
-//     it("should throw error when user not found", async () => {
-//       mockUserRepository.getUserById.mockResolvedValueOnce(null);
+      expect(result).toEqual({
+        status: 200,
+        message: "User updated successfully",
+        data: updatedUser,
+      });
+      expect(bcrypt.hash).toHaveBeenCalledWith(password, 10);
+      expect(mockUserRepository.updateUser).toHaveBeenCalledWith(id, {
+        fullname,
+        email,
+        password: hashedPassword,
+      });
+    });
 
-//       await expect(
-//         userService.updateUser("1", "updated@test.com", "newpassword")
-//       ).rejects.toThrowError("User not found");
-//       expect(mockUserRepository.getUserById).toHaveBeenCalledWith("1");
-//       expect(mockUserRepository.updateUser).not.toHaveBeenCalled();
-//     });
-//   });
-// });
+    it("should throw error when user not found", async () => {
+      const id = "1";
+      const fullname = "updatedUser";
+      const email = "updated@example.com";
+      const password = "updatedPassword";
+
+      mockUserRepository.updateUser.mockResolvedValue(null);
+
+      await expect(
+        userService.updateUser(id, fullname, email, password)
+      ).rejects.toThrowError("User not found");
+      expect(mockUserRepository.updateUser).toHaveBeenCalledWith(id, {
+        fullname,
+        email,
+        password: expect.any(String),
+      });
+    });
+  });
+});

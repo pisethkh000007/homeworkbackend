@@ -1,39 +1,27 @@
-import { Schema, model, Document } from "mongoose";
-import validator from "validator";
+//user.model.ts
+import { Document, Schema, model } from "mongoose";
 
 export interface User {
-  username: string;
-  fullName: string;
+  _id: string;
+  fullname: string;
   email: string;
   password: string;
-  status?: string;
-  role: string; // Add role to User interface
+  roles: string[];
 }
 
-export interface UserDocument extends User, Document {}
+export interface UserDocument extends Document {
+  _id: string;
+  fullname: string;
+  email: string;
+  password: string;
+  roles: string[];
+}
 
-const UserSchema: Schema = new Schema({
-  username: { type: String, required: true },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    validate: {
-      validator: (value: string) => validator.isEmail(value),
-      message: (props: { value: string }) =>
-        ` ${props.value} is not a valid email!`,
-    },
-  },
-  password: {
-    type: String,
-    required: true,
-    validate: {
-      validator: (value: string) => validator.isStrongPassword(value),
-      message: (_props: { value: string }) => "Password is not strong enough!",
-    },
-  },
-  status: { type: String, default: "active" },
-  role: { type: String, required: true, default: "user" }, // Add role to schema
+const userSchema = new Schema<UserDocument>({
+  fullname: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  roles: { type: [String], default: ["user"] },
 });
 
-export const UserModel = model<UserDocument>("User", UserSchema);
+export const UserModel = model<UserDocument>("User", userSchema);
