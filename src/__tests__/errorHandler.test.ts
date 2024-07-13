@@ -16,6 +16,11 @@ describe("errorHandler", () => {
       json: jest.fn().mockReturnThis(),
     };
     mockNextFunction = jest.fn();
+    jest.spyOn(console, "log").mockImplementation(() => {}); // Mock console.log
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks(); // Restore all mocks after each test
   });
 
   it("should handle ValidationError", () => {
