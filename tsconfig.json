@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
+    // "baseUrl": ".",
     "module": "commonjs",
     "esModuleInterop": true,
-    "target": "es6",
+    "target": "es6", // compile to es6
     "moduleResolution": "node",
     "sourceMap": true,
-    "rootDir": "./src",
+    "rootDir": "./src", // location of where it started to compile
     "outDir": "./build",
     "strict": true,
     "experimentalDecorators": true,
@@ -16,15 +17,14 @@
     "noUnusedParameters": true,
     "alwaysStrict": true,
     "pretty": true,
-    "baseUrl": ".", // Added baseUrl
+    // Import Files From The Root Directory Using `@` prefix
     "paths": {
-      "@/*": ["src/*"] // Adjusted path alias
-    },
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+      "@/*": ["./*"]
+    }
   },
-  "include": ["src", "src/__tests__"],
-  "exclude": ["node_modules", "dist", "build"],
+  "include": ["src/**/*", "build-script.js", "__tests__/**/*"],
+  "exclude": ["node_modules", "**/*.spec.ts"],
+  // Allow ts-node to run with tsconfig-paths
   "ts-node": {
     "require": ["tsconfig-paths/register"]
   }

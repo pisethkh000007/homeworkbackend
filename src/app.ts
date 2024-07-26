@@ -1,9 +1,9 @@
 import express from "express";
 import swaggerUi from "swagger-ui-express";
-import { RegisterRoutes } from "@/src/routes/v1/routes";
+import { RegisterRoutes } from "../src/routes/v1/routes";
 import fs from "fs";
 import path from "path";
-import { errorHandler } from "@/src/middlewares/errorHandler";
+import { errorHandler } from "../src/middlewares/errorHandler";
 
 // Dynamically load swagger.json
 const swaggerDocument = JSON.parse(
